@@ -26,6 +26,20 @@ $(function() {
             expect(allFeeds.length).not.toBe(0);
         });
 
+        it('url defined and not empty', function() {
+            allFeeds.forEach(function(feed) {
+                expect(feed.url).toBeDefined();
+                expect(feed.url.length).not.toBe(0);
+            });
+        });
+
+        it('name defined and not empty', function() {
+            allFeeds.forEach(function(feed) {
+                expect(feed.name).toBeDefined();
+                expect(feed.name.length).not.toBe(0);
+            });
+        });
+
 
         /* TODO: Write a test that loops through each feed
          * in the allFeeds object and ensures it has a URL defined
@@ -39,34 +53,100 @@ $(function() {
          */
     });
 
+    describe('The menu', function() {
+        it('hidden at startup', function() {
+            expect(document.getElementsByTagName('body')[0].classList.contains('menu-hidden')).toBe(true);
+            // Get bounding rect of the hidden menu
+            var bounds = document.getElementsByClassName('slide-menu')[0].getBoundingClientRect();
+            expect(bounds.left + bounds.width).toBe(0);
+        });
 
-    /* TODO: Write a new test suite named "The menu" */
+        it('menu icon displays and hides menu', function(done) {
+            var delay = 201;
+            var body = document.getElementsByTagName('body')[0];
+            var icon = document.getElementsByTagName('body')[0].getElementsByClassName('menu-icon-link')[0];
+            var menu = document.getElementsByClassName('slide-menu')[0];
+            // Programmatically click the menu icon.  Then wait 200 ms before testing menu bounds
+            icon.click();
+            setTimeout(function() {
+                var hidden = body.classList.contains('menu-hidden');
+                var left = menu.getBoundingClientRect().left;
+                expect(hidden).toBe(false);
+                expect(left).toBe(0);
 
-        /* TODO: Write a test that ensures the menu element is
-         * hidden by default. You'll have to analyze the HTML and
-         * the CSS to determine how we're performing the
-         * hiding/showing of the menu element.
-         */
+                // Click icon a second time and test whether it returns to its original position.
+                icon.click();
+                setTimeout(function() {
+                    var hidden = body.classList.contains('menu-hidden');
+                    var bounds = menu.getBoundingClientRect();
+                    var right = bounds.left + bounds.width;
+                    expect(hidden).toBe(true);
+                    expect(right).toBe(0);  
+                    done();
+                }, delay);
+            }, delay);
+        });
+    });
 
-         /* TODO: Write a test that ensures the menu changes
-          * visibility when the menu icon is clicked. This test
-          * should have two expectations: does the menu display when
-          * clicked and does it hide when clicked again.
-          */
+    describe('Initial Entries', function() {
+        beforeEach(function(done) {
+            loadFeed(0, done);        
+        });
 
-    /* TODO: Write a new test suite named "Initial Entries" */
+        it('has at least one entry element in feed container', function() {
+            var feed = document.getElementsByClassName('feed')[0];
+            var entries = feed.getElementsByClassName('entry');
+            expect(entries.length).toBeGreaterThan(0);
+        });
+    });
 
-        /* TODO: Write a test that ensures when the loadFeed
-         * function is called and completes its work, there is at least
-         * a single .entry element within the .feed container.
-         * Remember, loadFeed() is asynchronous so this test wil require
-         * the use of Jasmine's beforeEach and asynchronous done() function.
-         */
+    describe('New Feed Selection', function() {
+        // test variable will hold variables to be tested
+        var test = this;
 
-    /* TODO: Write a new test suite named "New Feed Selection"
+        beforeEach(function(done) {
+            // make two feed arrays
+            test.firstFeed = [];
+            test.secondFeed = [];
+            var i = 0;
+            // Load feed and process results
+            loadFeed(i, function() {
+                var feed = document.getElementsByClassName('feed')[0];
+                var entries = feed.getElementsByClassName('entry');
+                for (var e = 0; e < entries.length; e++) {
+                    // Add to array to be tested later
+                    test.firstFeed.push(entries[0].getElementsByTagName('h2')[0].innerHTML);
+                }
+                ++i;
+                // Load second feed
+                loadFeed(i, function() {
+                    var feed = document.getElementsByClassName('feed')[0];
+                    var entries = feed.getElementsByClassName('entry');
+                    for (var e = 0; e < entries.length; e++) {
+                        test.secondFeed.push(entries[0].getElementsByTagName('h2')[0].innerHTML);
+                    }
+                    // End async steps in unit test
+                    done();
+                });
+            });
+        });
 
-        /* TODO: Write a test that ensures when a new feed is loaded
-         * by the loadFeed function that the content actually changes.
-         * Remember, loadFeed() is asynchronous.
-         */
+        it('changes content on new selection', function() {
+            expect(test.firstFeed).not.toEqual(test.secondFeed);
+        });
+    });
+
+    // Delete button not yet implemented    
+    describe('Delete button', function() {
+        it('deletes entry when clicked', function() {
+            var feed = document.getElementsByClassName('feed')[0];
+            var entries = feed.getElementsByClassName('entry');
+            for (var e = 0; e < entries.length; e++) {
+                // Click delete button
+                entries[e].getElementsByClassName('delete').click();
+            }
+            expect(entries.length).toBe(0);
+        });
+    });
+    
 }());
